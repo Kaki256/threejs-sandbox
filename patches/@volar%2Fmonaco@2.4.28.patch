@@ -1,0 +1,34 @@
+diff --git a/lib/editor.js b/lib/editor.js
+index 5a34a4a9db460ffb9c360e8c069b84b32595ee6f..ee52963c61e9f87669815bb6c906defdb0f39c8f 100644
+--- a/lib/editor.js
++++ b/lib/editor.js
+@@ -60,6 +60,7 @@ export function activateMarkers(worker, languages, markersOwn, getSyncUris, edit
+             return;
+         }
+         const languageService = await worker.withSyncedResources(getSyncUris());
++        if (model.isDisposed()) return;
+         const token = createTokenForModelChange(model);
+         const diagnostics = await languageService.getDiagnostics(getRequestId(token.token, languageService), model.uri);
+         token.dispose();
+@@ -125,10 +126,11 @@ export function activateAutoInsertion(worker, languages, getSyncUris, editor) {
+         const version = model.getVersionId();
+         timeout = setTimeout(() => {
+             (async () => {
+-                if (model.getVersionId() !== version) {
++                if (model.isDisposed() || model.getVersionId() !== version) {
+                     return;
+                 }
+                 const languageService = await worker.withSyncedResources(getSyncUris());
++                if (model.isDisposed()) return;
+                 const token = createTokenForModelChange(model);
+                 const edit = await languageService.getAutoInsertSnippet(getRequestId(token.token, languageService), model.uri, fromPosition({
+                     lineNumber: lastChange.range.startLineNumber,
+@@ -163,7 +165,7 @@ function createTokenForModelChange(model) {
+     let callbacks;
+     const token = {
+         get isCancellationRequested() {
+-            return model.getVersionId() !== lastVersionId;
++            return model.isDisposed() || model.getVersionId() !== lastVersionId;
+         },
+         onCancellationRequested(cb) {
+             const disposable = model.onDidChangeContent(() => {

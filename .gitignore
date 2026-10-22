@@ -1,0 +1,6 @@
+node_modules/
+dist-public/
+public/sandbox-runtime.js
+public/sandbox-editor-types.json
+*.local
+.DS_Store
